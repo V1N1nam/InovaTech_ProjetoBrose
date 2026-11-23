@@ -17,6 +17,9 @@ from .models import Funcionario, Skill
 from django.http import FileResponse, HttpResponse
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages
+import logging
+
+logger = logging.getLogger(__name__)
 
 def minha_view(request):
     return render(request, 'index.html')
@@ -266,8 +269,10 @@ def gerar_relatorio_pdf(request):
         result.seek(0)
         return FileResponse(result, content_type='application/pdf')
     
-    except Exception as e:
-        return HttpResponse(f"Erro na geração do PDF: {str(e)}", status=500)
+    except Exception:
+        # Detalhes da exceção vão só para o log do servidor, nunca para o cliente (CWE-209).
+        logger.exception("Falha ao gerar o relatório em PDF")
+        return HttpResponse("Erro ao gerar o PDF", status=500, content_type="text/plain; charset=utf-8")
 
 # FUNCAO ANTIGA
 @login_required(login_url='login')
